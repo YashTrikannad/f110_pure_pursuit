@@ -1,4 +1,5 @@
 # Config file for f110_pure_pursuit package
 
 # Parameter for pure pursuit algorithm
-lookahead_distance : 3.14
+# A good estimate is 0-2r (According to the implementation explanation given in RI, CMU)
+lookahead_distance : 0.5
