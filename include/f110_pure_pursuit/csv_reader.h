@@ -47,7 +47,6 @@ public:
             f110::WayPoint way_point{};
             way_point.x = std::stod(vec[0]);
             way_point.y = std::stod(vec[1]);
-            way_point.heading = std::stod(vec[2]);
             way_point.speed = 0.0;
 
             dataList.emplace_back(way_point);

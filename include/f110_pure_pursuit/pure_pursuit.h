@@ -9,28 +9,33 @@
 namespace f110
 {
 
-/// Get the l2 distance between the two waypoints
-/// @param way_point1
-/// @param way_point2
-/// @return
-double waypoint_distance(const WayPoint& way_point1, const WayPoint& way_point2)
+std::vector<WayPoint> transform(const std::vector<WayPoint>& reference_way_points, const WayPoint& current_way_point)
 {
-    const double diff_x = way_point1.x - way_point2.x;
-    const double diff_y = way_point1.y - way_point2.y;
-    return sqrt((diff_x*diff_x) + (diff_y*diff_y));
+    std::vector<WayPoint> transformed_way_points;
+    for(const auto& reference_way_point: reference_way_points)
+    {
+        WayPoint transformed_way_point{};
+        transformed_way_point.x = reference_way_point.x - current_way_point.x;
+        transformed_way_point.y = reference_way_point.y - current_way_point.y;
+        transformed_way_point.speed = reference_way_point.speed;
+        transformed_way_points.emplace_back(transformed_way_point);
+    }
+    return transformed_way_points;
 }
+
 
 ///
 /// @param current_way_point
 /// @return
 WayPoint get_best_track_point(const WayPoint &current_way_point, const std::vector<WayPoint>& way_point_data,
-        double lookahead_distance, double last_best = 0)
+        double lookahead_distance)
 {
     size_t closest_way_point_index = 0;
-    double closest_distance = 0.0;
+    double closest_distance = std::numeric_limits<double>::max();
     for(size_t i=0; i <way_point_data.size(); ++i)
     {
-        double distance = waypoint_distance(current_way_point, way_point_data[i]);
+        if(way_point_data[i].x < 0) continue;
+        double distance = way_point_data[i].x*way_point_data[i].x + way_point_data[i].y*way_point_data[i].y;
         double lookahead_diff = std::abs(distance - lookahead_distance);
         if(lookahead_diff < closest_distance)
         {
