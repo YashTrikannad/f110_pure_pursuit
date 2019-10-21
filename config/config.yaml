@@ -1,0 +1,4 @@
+# Config file for f110_pure_pursuit package
+
+# Parameter for pure pursuit algorithm
+lookahead_distance : 3.14

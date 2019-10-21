@@ -1,0 +1,7 @@
+<launch>
+
+    <rosparam command="load" file="$(find f110_pure_pursuit)/config/config.yaml" />
+
+    <node pkg="f110_pure_pursuit" name="pure_pursuit_node" type="pure_pursuit_node" output="screen"/>
+
+</launch>

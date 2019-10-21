@@ -1,19 +1,19 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/LaserScan.h>
-// TODO: include ROS msg type headers and libraries you need
+#include <ackermann_msgs/AckermannDriveStamped.h>
+
+#include "csv_reader.h"
 
 class PurePursuit {
-private:
-    ros::NodeHandle n;
-    // TODO: create ROS subscribers and publishers
-
 public:
-    PurePursuit() {
-        n = ros::NodeHandle();
-
-        // TODO: create ROS subscribers and publishers
-        
+    PurePursuit() :
+        node_handle_(ros::NodeHandle()),
+        pose_sub_(node_handle_.subscribe("scan", 5, &PurePursuit::pose_callback, this)),
+        drive_pub_(node_handle_.advertise<ackermann_msgs::AckermannDriveStamped>("nav", 5))
+    {
+        CSVReader reader("wp-2019-10-21-00-46-17.csv");
+        waypoint_data_ = reader.getData();
     }
 
     void pose_callback(const geometry_msgs::PoseStamped::ConstPtr &pose_msg) {
@@ -26,6 +26,12 @@ public:
         // TODO: publish drive message, don't forget to limit the steering angle between -0.4189 and 0.4189 radians
     }
 
+private:
+    std::vector<std::vector<double>> waypoint_data_;
+    ros::NodeHandle node_handle_;
+    ros::Subscriber pose_sub_;
+    ros::Subscriber true_pose_;
+    ros::Publisher drive_pub_;
 };
 
 int main(int argc, char ** argv)
