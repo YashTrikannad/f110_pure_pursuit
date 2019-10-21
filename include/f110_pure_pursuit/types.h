@@ -17,6 +17,32 @@ struct WayPoint
     {
         x = pose_msg->pose.position.x;
         y = pose_msg->pose.position.y;
+
+        tf::Quaternion quaternion{pose_msg->pose.orientation.x,
+                                  pose_msg->pose.orientation.y,
+                                  pose_msg->pose.orientation.z,
+                                  pose_msg->pose.orientation.w};
+        tf::Matrix3x3 matrix(quaternion);
+        double roll, pitch, yaw;
+        matrix.getRPY(roll, pitch, yaw);
+        heading = yaw;
+
+        speed = current_speed;
+    }
+    WayPoint(const geometry_msgs::Pose &pose_msg, double current_speed = 1.0)
+    {
+        x = pose_msg.position.x;
+        y = pose_msg.position.y;
+
+        tf::Quaternion quaternion{pose_msg.orientation.x,
+                                  pose_msg.orientation.y,
+                                  pose_msg.orientation.z,
+                                  pose_msg.orientation.w};
+        tf::Matrix3x3 matrix(quaternion);
+        double roll, pitch, yaw;
+        matrix.getRPY(roll, pitch, yaw);
+        heading = yaw;
+
         speed = current_speed;
     }
 
@@ -25,11 +51,12 @@ struct WayPoint
     std::string GetString() const
     {
         std::stringstream stream;
-        stream << "x: " << x << "\ty: " << y << "\tspeed: " <<  speed << "\n";
+        stream << "x: " << x << "\ty: " << y << "\theading: " << heading << "\tspeed: " <<  speed << "\n";
     }
 
     double x;
     double y;
+    double heading;
     double speed;
 };
 
