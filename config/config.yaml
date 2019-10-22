@@ -8,5 +8,6 @@ lookahead_distance : 1.5
 n_way_points: 700
 
 # Speed of the car
-high_speed: 7.0
-low_speed: 1.0
+high_speed: 6.0
+medium_speed: 4.0
+low_speed: 2.0

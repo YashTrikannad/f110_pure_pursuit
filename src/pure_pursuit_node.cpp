@@ -83,7 +83,6 @@ public:
 
         // Find the best waypoint to track (at lookahead distance)
         const auto goal_way_point_index = f110::get_best_track_point_index(transformed_way_points, lookahead_distance_, last_best_index_);
-//        add_way_point_visualization(goal_way_point, "base_link", 1.0, 0.0, 0.0, 0.3, 0.2, 0.2, 0.2);
 
         geometry_msgs::TransformStamped map_to_base_link;
         map_to_base_link = tf_buffer_.lookupTransform("base_link", "map", ros::Time(0));
@@ -97,6 +96,8 @@ public:
         goal_way_point.orientation.w = 1;
         tf2::doTransform(goal_way_point, goal_way_point, map_to_base_link);
 
+        add_way_point_visualization(goal_way_point, "base_link", 1.0, 0.0, 0.0, 0.3, 0.2, 0.2, 0.2);
+
         // Calculate curvature/steering angle
         const double steering_angle = 2*(goal_way_point.position.y)/(lookahead_distance_*lookahead_distance_);
 
@@ -105,27 +106,42 @@ public:
         drive_msg.header.stamp = ros::Time::now();
         drive_msg.header.frame_id = "base_link";
 
-        // Thresholding for limiting the movement of car wheels to avoid servo locking
-        if(steering_angle > 0.2)
+        // Thresholding for limiting the movement of car wheels to avoid servo locking and variable speed
+        // adjustment
+        drive_msg.drive.steering_angle = steering_angle;
+        if(steering_angle > 0.1)
         {
-            drive_msg.drive.speed = low_speed_;
-            if(steering_angle > 0.4)
+            if (steering_angle > 0.2)
             {
-                drive_msg.drive.steering_angle = 0.4;
+                drive_msg.drive.speed = low_speed_;
+                if (steering_angle > 0.4)
+                {
+                    drive_msg.drive.steering_angle = 0.4;
+                }
+            }
+            else
+            {
+                drive_msg.drive.speed = medium_speed_;
             }
         }
-        else if(steering_angle < -0.2)
+        else if(steering_angle < -0.1)
         {
-            drive_msg.drive.speed = low_speed_;
-            if(steering_angle < -0.4)
+            if (steering_angle < -0.2)
             {
-                drive_msg.drive.steering_angle = -0.4;
+                drive_msg.drive.speed = low_speed_;
+                if (steering_angle < -0.4)
+                {
+                    drive_msg.drive.steering_angle = -0.4;
+                }
+            }
+            else
+            {
+                drive_msg.drive.speed = medium_speed_;
             }
         }
         else
         {
             drive_msg.drive.speed = high_speed_;
-            drive_msg.drive.steering_angle = steering_angle;
         }
         drive_pub_.publish(drive_msg);
     }
@@ -138,6 +154,7 @@ private:
 
     double lookahead_distance_;
     double high_speed_;
+    double medium_speed_;
     double low_speed_;
     int n_way_points_;
 
