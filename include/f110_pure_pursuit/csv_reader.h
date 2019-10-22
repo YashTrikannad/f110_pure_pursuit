@@ -51,10 +51,18 @@ public:
 
             dataList.emplace_back(way_point);
         }
+
+        std::vector<f110::WayPoint> truncated_dataList(10000);
+        size_t increment = truncated_dataList.size()/700;
+        for(size_t i = 0; i < dataList.size(); i = i + increment)
+        {
+            truncated_dataList.emplace_back(dataList[i]);
+        }
+
         // Close the File
         file.close();
 
-        return dataList;
+        return truncated_dataList;
     }
 };
 

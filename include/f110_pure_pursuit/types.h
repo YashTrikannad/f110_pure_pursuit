@@ -29,6 +29,7 @@ struct WayPoint
 
         speed = current_speed;
     }
+
     WayPoint(const geometry_msgs::Pose &pose_msg, double current_speed = 1.0)
     {
         x = pose_msg.position.x;

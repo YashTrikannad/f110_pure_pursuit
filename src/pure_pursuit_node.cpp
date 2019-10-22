@@ -21,11 +21,12 @@ public:
         tf_listener_(tf_buffer_)
     {
         node_handle_.getParam("/lookahead_distance", lookahead_distance_);
-        f110::CSVReader reader("/home/yash/yasht_ws/src/f110_pure_pursuit/sensor_data/gtpose.csv");
+        f110::CSVReader reader("/home/yash/yasht_ws/src/f110_pure_pursuit/sensor_data/gtpose_fast.csv");
         way_point_data_ = reader.getData();
         ROS_INFO("Pure Pursuit Node Initialized");
         visualize_waypoint_data();
         ROS_INFO("Way Points Published as Markers.");
+        ros::Duration(1.0).sleep();
     }
 
     void add_way_point_visualization(const f110::WayPoint& way_point, const std::string& frame_id,
@@ -72,20 +73,12 @@ public:
     {
         // Convert pose_msg to WayPoint
         const auto current_way_point = f110::WayPoint(pose_msg);
-        ROS_DEBUG("current_way_point x: %f", current_way_point.x);
-        ROS_DEBUG("current_way_point y: %f", current_way_point.y);
-        ROS_DEBUG("current_way_point heading: %f", current_way_point.heading);
-        ROS_DEBUG("current_way_point speed: %f", current_way_point.speed);
 
         // Transform Points
         const auto transformed_way_points = transform(way_point_data_, current_way_point, tf_buffer_, tf_listener_);
 
         // Find the best waypoint to track (at lookahead distance)
         const auto goal_way_point = f110::get_best_track_point(transformed_way_points, lookahead_distance_);
-        ROS_DEBUG("goal_way_point x: %f", goal_way_point.x);
-        ROS_DEBUG("goal_way_point y: %f", goal_way_point.y);
-        ROS_DEBUG("goal_way_point heading: %f", goal_way_point.heading);
-        ROS_DEBUG("goal_way_point speed: %f", goal_way_point.speed);
         add_way_point_visualization(goal_way_point, "laser", 1.0, 0.0, 0.0, 0.3, 0.2, 0.2, 0.2);
 
         // Calculate curvature/steering angle
