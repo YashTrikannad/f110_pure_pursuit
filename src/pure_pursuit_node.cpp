@@ -18,11 +18,15 @@ public:
         drive_pub_(node_handle_.advertise<ackermann_msgs::AckermannDriveStamped>("nav", 1)),
         way_point_viz_pub_(node_handle_.advertise<visualization_msgs::Marker>("waypoint_markers", 100)),
         visualized_(false),
+        last_best_index_(0),
         tf_listener_(tf_buffer_)
     {
         node_handle_.getParam("/lookahead_distance", lookahead_distance_);
+        node_handle_.getParam("/high_speed", high_speed_);
+        node_handle_.getParam("/low_speed", low_speed_);
+        node_handle_.getParam("/n_way_points", n_way_points_);
         f110::CSVReader reader("/home/yash/yasht_ws/src/f110_pure_pursuit/sensor_data/gtpose_fast.csv");
-        way_point_data_ = reader.getData();
+        way_point_data_ = reader.getData(n_way_points_);
         ROS_INFO("Pure Pursuit Node Initialized");
         visualize_waypoint_data();
         ROS_INFO("Way Points Published as Markers.");
@@ -60,7 +64,7 @@ public:
 
     void visualize_waypoint_data()
     {
-        const size_t increment = way_point_data_.size()/100;
+        const size_t increment = way_point_data_.size()/5;
         for(size_t i=0, j=0; i<way_point_data_.size(); i=i+increment, j++)
         {
             add_way_point_visualization(way_point_data_[i], "map", 0.0, 0.0, 1.0, 0.5);
@@ -78,17 +82,29 @@ public:
         const auto transformed_way_points = transform(way_point_data_, current_way_point, tf_buffer_, tf_listener_);
 
         // Find the best waypoint to track (at lookahead distance)
-        const auto goal_way_point = f110::get_best_track_point(transformed_way_points, lookahead_distance_);
-        add_way_point_visualization(goal_way_point, "laser", 1.0, 0.0, 0.0, 0.3, 0.2, 0.2, 0.2);
+        const auto goal_way_point_index = f110::get_best_track_point_index(transformed_way_points, lookahead_distance_, last_best_index_);
+//        add_way_point_visualization(goal_way_point, "base_link", 1.0, 0.0, 0.0, 0.3, 0.2, 0.2, 0.2);
+
+        geometry_msgs::TransformStamped map_to_base_link;
+        map_to_base_link = tf_buffer_.lookupTransform("base_link", "map", ros::Time(0));
+        geometry_msgs::Pose goal_way_point;
+        goal_way_point.position.x = way_point_data_[goal_way_point_index].x;
+        goal_way_point.position.y = way_point_data_[goal_way_point_index].y;
+        goal_way_point.position.z = 0;
+        goal_way_point.orientation.x = 0;
+        goal_way_point.orientation.y = 0;
+        goal_way_point.orientation.z = 0;
+        goal_way_point.orientation.w = 1;
+        tf2::doTransform(goal_way_point, goal_way_point, map_to_base_link);
 
         // Calculate curvature/steering angle
-        const double steering_angle = 2*(goal_way_point.y)/(lookahead_distance_*lookahead_distance_);
+        const double steering_angle = 2*(goal_way_point.position.y)/(lookahead_distance_*lookahead_distance_);
 
         // Publish drive message
         ackermann_msgs::AckermannDriveStamped drive_msg;
         drive_msg.header.stamp = ros::Time::now();
-        drive_msg.header.frame_id = "laser";
-        drive_msg.drive.speed = 1.0;
+        drive_msg.header.frame_id = "base_link";
+        drive_msg.drive.speed = high_speed_;
 
         // Thresholding for limiting the movement of car wheels to avoid servo locking
         if(steering_angle > 0.4)
@@ -113,12 +129,15 @@ private:
     ros::Publisher drive_pub_;
 
     double lookahead_distance_;
+    double high_speed_;
+    double low_speed_;
+    int n_way_points_;
 
     std::vector<f110::WayPoint> way_point_data_;
 
     bool visualized_;
     size_t unique_marker_id_;
-
+    size_t last_best_index_;
     tf2_ros::TransformListener tf_listener_;
     tf2_ros::Buffer tf_buffer_;
 };

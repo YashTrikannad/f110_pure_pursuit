@@ -29,7 +29,7 @@ public:
 
     ///
     /// Function to fetch data from a CSV File
-    std::vector<f110::WayPoint> getData()
+    std::vector<f110::WayPoint> getData(int n_points)
     {
         std::ifstream file(fileName);
         if (!file)
@@ -52,8 +52,8 @@ public:
             dataList.emplace_back(way_point);
         }
 
-        std::vector<f110::WayPoint> truncated_dataList(10000);
-        size_t increment = truncated_dataList.size()/700;
+        std::vector<f110::WayPoint> truncated_dataList;
+        size_t increment = dataList.size()/n_points;
         for(size_t i = 0; i < dataList.size(); i = i + increment)
         {
             truncated_dataList.emplace_back(dataList[i]);
