@@ -104,19 +104,27 @@ public:
         ackermann_msgs::AckermannDriveStamped drive_msg;
         drive_msg.header.stamp = ros::Time::now();
         drive_msg.header.frame_id = "base_link";
-        drive_msg.drive.speed = high_speed_;
 
         // Thresholding for limiting the movement of car wheels to avoid servo locking
-        if(steering_angle > 0.4)
+        if(steering_angle > 0.2)
         {
-            drive_msg.drive.steering_angle = 0.4;
+            drive_msg.drive.speed = low_speed_;
+            if(steering_angle > 0.4)
+            {
+                drive_msg.drive.steering_angle = 0.4;
+            }
         }
-        else if(steering_angle < -0.4)
+        else if(steering_angle < -0.2)
         {
-            drive_msg.drive.steering_angle = -0.4;
+            drive_msg.drive.speed = low_speed_;
+            if(steering_angle < -0.4)
+            {
+                drive_msg.drive.steering_angle = -0.4;
+            }
         }
         else
         {
+            drive_msg.drive.speed = high_speed_;
             drive_msg.drive.steering_angle = steering_angle;
         }
         drive_pub_.publish(drive_msg);

@@ -2,11 +2,11 @@
 
 # Parameter for pure pursuit algorithm
 # A good estimate is 0-2r (According to the implementation explanation given in RI, CMU)
-lookahead_distance : 1.0
+lookahead_distance : 1.5
 
 # No. of Waypoints in the path
 n_way_points: 700
 
 # Speed of the car
-high_speed: 4.0
-low_speed: 2.0
+high_speed: 7.0
+low_speed: 1.0
